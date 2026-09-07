@@ -12,8 +12,11 @@ impl Config {
         Self {
             listen_addr: env::var("FEMTOBOARD_LISTEN_ADDR")
                 .unwrap_or_else(|_| "0.0.0.0:8080".to_string()),
+            // `mode=rwc` creates the file if it doesn't exist yet (sea-orm's
+            // sqlx-sqlite backend doesn't expose a separate create_if_missing
+            // option — it's a connection-string query param instead).
             database_url: env::var("DATABASE_URL")
-                .unwrap_or_else(|_| "sqlite://femtoboard.db".to_string()),
+                .unwrap_or_else(|_| "sqlite://femtoboard.db?mode=rwc".to_string()),
             ip_hash_salt: env::var("FEMTOBOARD_IP_HASH_SALT")
                 .unwrap_or_else(|_| "dev-insecure-salt-change-me".to_string()),
         }

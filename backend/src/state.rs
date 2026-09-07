@@ -1,9 +1,9 @@
-use sqlx::SqlitePool;
+use sea_orm::DatabaseConnection;
 
 use crate::config::Config;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub pool: SqlitePool,
+    pub db: DatabaseConnection,
     pub config: Config,
 }

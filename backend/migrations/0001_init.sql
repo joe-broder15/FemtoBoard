@@ -8,7 +8,7 @@ CREATE TABLE boards (
     slug         TEXT NOT NULL UNIQUE,
     name         TEXT NOT NULL,
     description  TEXT NOT NULL DEFAULT '',
-    nsfw         INTEGER NOT NULL DEFAULT 0,
+    nsfw         BOOLEAN NOT NULL DEFAULT 0,
     thread_limit INTEGER NOT NULL DEFAULT 100,
     bump_limit   INTEGER NOT NULL DEFAULT 300,
     created_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
@@ -20,9 +20,9 @@ CREATE TABLE threads (
     subject     TEXT NOT NULL DEFAULT '',
     created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
     bumped_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-    is_pinned   INTEGER NOT NULL DEFAULT 0,
-    is_locked   INTEGER NOT NULL DEFAULT 0,
-    is_archived INTEGER NOT NULL DEFAULT 0
+    is_pinned   BOOLEAN NOT NULL DEFAULT 0,
+    is_locked   BOOLEAN NOT NULL DEFAULT 0,
+    is_archived BOOLEAN NOT NULL DEFAULT 0
 );
 CREATE INDEX idx_threads_board_bumped ON threads(board_id, bumped_at DESC);
 
@@ -50,7 +50,7 @@ CREATE TABLE posts (
     session_id  TEXT,
     file_id     INTEGER REFERENCES files(id),
     created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-    is_deleted  INTEGER NOT NULL DEFAULT 0
+    is_deleted  BOOLEAN NOT NULL DEFAULT 0
 );
 CREATE INDEX idx_posts_thread ON posts(thread_id, id);
 CREATE INDEX idx_posts_ip_hash ON posts(ip_hash, created_at);
@@ -70,7 +70,7 @@ CREATE TABLE reports (
     post_id     INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
     reason      TEXT NOT NULL DEFAULT '',
     created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-    resolved    INTEGER NOT NULL DEFAULT 0,
+    resolved    BOOLEAN NOT NULL DEFAULT 0,
     resolved_by INTEGER
 );
 
@@ -104,5 +104,5 @@ CREATE TABLE puzzle_challenges (
     difficulty  INTEGER NOT NULL,
     issued_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
     expires_at  TEXT NOT NULL,
-    used        INTEGER NOT NULL DEFAULT 0
+    used        BOOLEAN NOT NULL DEFAULT 0
 );

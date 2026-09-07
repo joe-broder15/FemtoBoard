@@ -12,7 +12,7 @@ pub enum AppError {
     #[error("bad request: {0}")]
     BadRequest(String),
     #[error(transparent)]
-    Db(#[from] sqlx::Error),
+    Db(#[from] sea_orm::DbErr),
 }
 
 impl IntoResponse for AppError {

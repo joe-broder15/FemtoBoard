@@ -11,7 +11,7 @@ board/thread/post CRUD. No auth, hash puzzle, or file uploads yet.
 
 ## Layout
 
-- `backend/` — Rust/Axum API + SQLite (via `sqlx`).
+- `backend/` — Rust/Axum API + SQLite (via `sea-orm`).
 - `frontend/` — React/Vite/Tailwind SPA.
 
 ## Running locally
@@ -21,6 +21,23 @@ Backend (listens on `:8080` by default, creates `femtoboard.db` on first run):
 ```sh
 cd backend
 cargo run
+```
+
+Migrations run automatically on startup. To manage them by hand (e.g. to
+inspect status, or apply/roll back without starting the server), use the
+`migrate` binary:
+
+```sh
+cd backend
+DATABASE_URL="sqlite://femtoboard.db?mode=rwc" cargo run --bin migrate -- status
+```
+
+After changing the schema (`backend/migrations/0001_init.sql` — or a new
+migration file for future changes) or running the app against a fresh DB,
+regenerate the SeaORM entities to match:
+
+```sh
+sea-orm-cli generate entity -u "sqlite://femtoboard.db" -o src/entities --with-serde both
 ```
 
 Frontend (Vite dev server on `:5173`, proxies API calls to `:8080` via

@@ -19,13 +19,15 @@
 | Layer | Choice | Notes |
 |---|---|---|
 | Backend | Rust, **Axum** | async, small binary, easy static linking (`musl`) for minimal container/Nix closure |
-| DB | **SQLite** via `sqlx` | single file, trivial backup (`cp board.db board.db.bak`), WAL mode for concurrent reads |
+| DB | **SQLite** via **SeaORM** | single file, trivial backup (`cp board.db board.db.bak`), WAL mode for concurrent reads |
 | Frontend | **React + Vite**, **Tailwind CSS** (utility classes, no component library) | CSR SPA; admin routes live in the same app, gated by role |
 | Sessions/Auth | Signed cookie sessions (`tower-sessions` or similar) + Argon2 password hashing for admin/mod accounts | no OAuth dependency, works offline in a homelab |
 | Image handling | `image` crate for thumbnailing; store original + thumb on disk | dedup by content hash (see §7) |
 | Packaging | Docker (multi-stage build) **and** Nix flake (`crane`/`naersk` for Rust build, `dockerTools.buildLayeredImage` for image parity) | one source of truth, two output paths |
 
 **Decision:** Axum over Actix-web, confirmed. Smaller dependency surface, cleaner `tower` middleware integration (rate limiting, sessions) for this app's size.
+
+**Decision:** SeaORM over hand-written `sqlx` queries or Diesel. SeaORM is async-first, which matches the Axum/Tokio stack directly (Diesel is sync by default and needs extra glue — `diesel-async` — to fit an async handler); it still uses `sqlx`'s SQLite driver underneath, so no runtime changed. `sea-orm-cli generate entity` derives entity structs (including relations, from the schema's foreign keys) directly from the migrated database, so the schema in `backend/migrations/0001_init.sql` stays the single source of truth — entities are generated output, not hand-maintained.
 
 ## 4. Data Model (SQLite)
 
@@ -89,7 +91,7 @@ This requires no external service and no image/audio dataset to maintain — jus
 
 **Nix path:**
 - `flake.nix` exposes:
-  - `devShells.default` — Rust toolchain, sqlx-cli, node/npm for frontend dev.
+  - `devShells.default` — Rust toolchain, sea-orm-cli, node/npm for frontend dev.
   - `packages.default` — the built binary (via `crane` or `naersk`), with frontend assets embedded (e.g. `rust-embed`) or shipped alongside.
   - `packages.dockerImage` — `pkgs.dockerTools.buildLayeredImage` wrapping `packages.default`, so the *same* Nix build produces the OCI image used by the Docker path — one build definition, not two.
   - `nixosModules.default` — a NixOS module (`services.imageboard.enable = true; ...`) for people who want it as a systemd unit instead of a container at all.

@@ -1,18 +1,9 @@
-mod config;
-mod error;
-mod handlers;
-mod identity;
-mod models;
-mod routes;
-mod state;
-
 use std::net::SocketAddr;
 
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use femtoboard_backend::{config::Config, migrator::Migrator, routes, state::AppState};
+use sea_orm::Database;
+use sea_orm_migration::MigratorTrait;
 use tracing_subscriber::EnvFilter;
-
-use config::Config;
-use state::AppState;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -22,17 +13,11 @@ async fn main() -> anyhow::Result<()> {
 
     let config = Config::from_env();
 
-    let connect_options: SqliteConnectOptions = config.database_url.parse::<SqliteConnectOptions>()?
-        .create_if_missing(true);
-    let pool = SqlitePoolOptions::new()
-        .max_connections(5)
-        .connect_with(connect_options)
-        .await?;
-
-    sqlx::migrate!("./migrations").run(&pool).await?;
+    let db = Database::connect(&config.database_url).await?;
+    Migrator::up(&db, None).await?;
 
     let listen_addr: SocketAddr = config.listen_addr.parse()?;
-    let state = AppState { pool, config };
+    let state = AppState { db, config };
     let app = routes::build_router(state);
 
     tracing::info!("listening on {listen_addr}");
