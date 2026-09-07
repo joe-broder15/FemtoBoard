@@ -1,69 +1,55 @@
+import createClient from "openapi-fetch";
+import type { components, paths } from "./api/schema";
+
+// Request/response types are generated from ../openapi.yaml — the single
+// source of truth for the API's shape. Run `npm run gen:api` after editing
+// that file (see frontend/README.md).
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8080/api";
 
-export interface Board {
-  id: number;
-  slug: string;
-  name: string;
-  description: string;
-  nsfw: boolean;
-  thread_limit: number;
-  bump_limit: number;
-  created_at: string;
-}
+const client = createClient<paths>({ baseUrl: API_BASE });
 
-export interface Post {
-  id: number;
-  thread_id: number;
-  board_id: number;
-  parent_id: number | null;
-  body: string;
-  author_name: string;
-  tripcode: string | null;
-  created_at: string;
-  is_deleted: boolean;
-}
+export type Board = components["schemas"]["Board"];
+export type Thread = components["schemas"]["Thread"];
+export type Post = components["schemas"]["Post"];
+export type ThreadWithPosts = components["schemas"]["ThreadWithPosts"];
 
-export interface Thread {
-  id: number;
-  board_id: number;
-  subject: string;
-  created_at: string;
-  bumped_at: string;
-  is_pinned: boolean;
-  is_locked: boolean;
-  is_archived: boolean;
-}
-
-export interface ThreadWithPosts extends Thread {
-  posts: Post[];
-}
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "content-type": "application/json" },
-    ...init,
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error ?? `request failed: ${res.status}`);
-  }
-  return res.json() as Promise<T>;
+function unwrap<T>({ data, error }: { data?: T; error?: { error?: string } }): T {
+  if (error) throw new Error(error.error ?? "request failed");
+  return data as T;
 }
 
 export const api = {
-  listBoards: () => request<Board[]>("/boards"),
-  getBoard: (slug: string) => request<Board>(`/boards/${slug}`),
-  listThreads: (slug: string) => request<Thread[]>(`/boards/${slug}/threads`),
-  createThread: (slug: string, body: { subject?: string; body: string; author_name?: string }) =>
-    request<ThreadWithPosts>(`/boards/${slug}/threads`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
-  getThread: (id: number, since?: number) =>
-    request<ThreadWithPosts>(`/threads/${id}${since ? `?since=${since}` : ""}`),
-  createReply: (threadId: number, body: { body: string; author_name?: string }) =>
-    request<Post>(`/threads/${threadId}/posts`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
+  listBoards: async () => unwrap(await client.GET("/boards")),
+
+  getBoard: async (slug: string) =>
+    unwrap(await client.GET("/boards/{slug}", { params: { path: { slug } } })),
+
+  listThreads: async (slug: string) =>
+    unwrap(await client.GET("/boards/{slug}/threads", { params: { path: { slug } } })),
+
+  createThread: async (
+    slug: string,
+    body: { subject?: string; body: string; author_name?: string },
+  ) =>
+    unwrap(
+      await client.POST("/boards/{slug}/threads", {
+        params: { path: { slug } },
+        body,
+      }),
+    ),
+
+  getThread: async (id: number, since?: number) =>
+    unwrap(
+      await client.GET("/threads/{id}", {
+        params: { path: { id }, query: since ? { since } : undefined },
+      }),
+    ),
+
+  createReply: async (threadId: number, body: { body: string; author_name?: string }) =>
+    unwrap(
+      await client.POST("/threads/{id}/posts", {
+        params: { path: { id: threadId } },
+        body,
+      }),
+    ),
 };

@@ -1,0 +1,327 @@
+openapi: 3.0.3
+info:
+  title: FemtoBoard API
+  version: 0.1.0
+  description: >
+    Single source of truth for FemtoBoard's HTTP API. The frontend generates
+    its request/response types (and a typed client) from this file — see
+    frontend/README.md's "API types" section — rather than hand-maintaining
+    them. The backend implementation lives in backend/src/routes.rs; keep
+    this file in sync with it by hand for now (see docs/design.md for
+    milestone status — no code-first generation from the Rust side yet).
+servers:
+  - url: http://localhost:8080/api
+
+paths:
+  /boards:
+    get:
+      operationId: listBoards
+      summary: List all boards
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Board"
+    post:
+      operationId: createBoard
+      summary: Create a board
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBoard"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
+        "400":
+          $ref: "#/components/responses/Error"
+
+  /boards/{slug}:
+    get:
+      operationId: getBoard
+      summary: Get a board by slug
+      parameters:
+        - $ref: "#/components/parameters/BoardSlug"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /boards/{slug}/threads:
+    get:
+      operationId: listThreads
+      summary: List threads on a board (catalog)
+      parameters:
+        - $ref: "#/components/parameters/BoardSlug"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Thread"
+        "404":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: createThread
+      summary: Create a thread (and its OP post) on a board
+      parameters:
+        - $ref: "#/components/parameters/BoardSlug"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateThread"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreadWithPosts"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /threads/{id}:
+    get:
+      operationId: getThread
+      summary: Get a thread with its posts
+      parameters:
+        - $ref: "#/components/parameters/ThreadId"
+        - name: since
+          in: query
+          description: Only return posts with id greater than this (for polling).
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreadWithPosts"
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /threads/{id}/posts:
+    post:
+      operationId: createReply
+      summary: Reply to a thread
+      parameters:
+        - $ref: "#/components/parameters/ThreadId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePost"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /posts/{id}:
+    get:
+      operationId: getPost
+      summary: Get a single post by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "404":
+          $ref: "#/components/responses/Error"
+
+components:
+  parameters:
+    BoardSlug:
+      name: slug
+      in: path
+      required: true
+      schema:
+        type: string
+    ThreadId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    Board:
+      type: object
+      required:
+        [id, slug, name, description, nsfw, thread_limit, bump_limit, created_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        nsfw:
+          type: boolean
+        thread_limit:
+          type: integer
+        bump_limit:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    CreateBoard:
+      type: object
+      required: [slug, name]
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        nsfw:
+          type: boolean
+
+    Thread:
+      type: object
+      required:
+        [id, board_id, subject, created_at, bumped_at, is_pinned, is_locked, is_archived]
+      properties:
+        id:
+          type: integer
+          format: int64
+        board_id:
+          type: integer
+          format: int64
+        subject:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        bumped_at:
+          type: string
+          format: date-time
+        is_pinned:
+          type: boolean
+        is_locked:
+          type: boolean
+        is_archived:
+          type: boolean
+
+    CreateThread:
+      type: object
+      required: [body]
+      properties:
+        subject:
+          type: string
+        body:
+          type: string
+        author_name:
+          type: string
+          description: "`Name#password` derives a tripcode; a bare name does not."
+
+    ThreadWithPosts:
+      allOf:
+        - $ref: "#/components/schemas/Thread"
+        - type: object
+          required: [posts]
+          properties:
+            posts:
+              type: array
+              items:
+                $ref: "#/components/schemas/Post"
+
+    Post:
+      type: object
+      required:
+        [id, thread_id, board_id, parent_id, body, author_name, tripcode, created_at, is_deleted]
+      properties:
+        id:
+          type: integer
+          format: int64
+        thread_id:
+          type: integer
+          format: int64
+        board_id:
+          type: integer
+          format: int64
+        parent_id:
+          type: integer
+          format: int64
+          nullable: true
+        body:
+          type: string
+        author_name:
+          type: string
+        tripcode:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        is_deleted:
+          type: boolean
+
+    CreatePost:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+        author_name:
+          type: string

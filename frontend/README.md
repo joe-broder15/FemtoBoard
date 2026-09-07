@@ -1,32 +1,35 @@
-# React + TypeScript + Vite
+# FemtoBoard frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + Vite + Tailwind SPA. See the [repo root README](../README.md) and
+[docs/design.md](../docs/design.md) for the project overview.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```sh
+npm install
+cp .env.example .env   # adjust VITE_API_BASE if the backend isn't on :8080
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## API types
+
+The API's request/response shapes are generated from [`../openapi.yaml`](../openapi.yaml)
+— that file is the single source of truth for the HTTP contract, not
+`src/api.ts`. After changing a route on the backend (`backend/src/routes.rs`),
+update `openapi.yaml` to match, then regenerate:
+
+```sh
+npm run gen:api
+```
+
+This runs [`openapi-typescript`](https://openapi-ts.dev/) and writes
+`src/api/schema.d.ts` (generated — do not hand-edit). `src/api.ts` wraps that
+schema with [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) to get a
+fully-typed client: request bodies, path/query params, and responses are all
+checked against the spec at compile time.
+
+## Build
+
+```sh
+npm run build
+```
