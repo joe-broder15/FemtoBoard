@@ -1,0 +1,5 @@
+{% if board.motd %}
+  <div class="mb-3 rounded-md border border-femto-border bg-femto-surface px-3 py-2 text-sm">
+    <span class="font-medium text-femto-muted">/{{ board.code }}/ MOTD:</span> {{ board.motd }}
+  </div>
+{% endif %}

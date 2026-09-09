@@ -1,0 +1,87 @@
+[project]
+name = "femtoboard"
+version = "0.1.0"
+description = "Lightweight anonymous imageboard"
+requires-python = ">=3.11"
+dependencies = [
+  "django>=5.0,<5.3",
+  "pillow>=10.3",
+  "argon2-cffi>=23.1",
+  "django-stubs-ext>=5.0",
+  "gunicorn>=22.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "uv>=0.4",
+  "django-stubs[compatible-mypy]>=5.0",
+  "mypy>=1.10",
+  "ruff>=0.6",
+  "pytest>=8.2",
+  "pytest-django>=4.8",
+]
+
+[project.scripts]
+femtoboard-manage = "femtoboard.cli:main"
+femtoboard-serve = "femtoboard.cli:serve"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["femtoboard", "boards", "posts", "moderation", "antispam", "mediafiles", "accounts"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "femtoboard.settings.test"
+python_files = ["tests.py", "test_*.py"]
+addopts = "-ra"
+testpaths = ["tests", "boards", "posts", "moderation", "antispam", "mediafiles", "accounts"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+exclude = ["migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "DJ", "ANN"]
+# ANN401 (no bare `Any`) is disabled: Django's own framework boundaries
+# (management command **options, ModelForm in ModelAdmin hooks, Form
+# constructor *args/**kwargs) are typed Any in django-stubs itself, so
+# application code touching them cannot do better than Any there.
+ignore = ["ANN401"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/migrations/*.py" = ["ANN"]
+"**/tests/*.py" = ["ANN"]
+"**/test_*.py" = ["ANN"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["mypy_django_plugin.main"]
+exclude = "migrations/"
+
+[[tool.mypy.overrides]]
+module = "*.migrations.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+# gunicorn ships no type stubs.
+module = "gunicorn.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Test functions take pytest fixtures as untyped parameters by convention
+# (their types come from conftest.py fixture return annotations, which
+# mypy cannot see through django-stubs' pytest-django integration), and
+# django-stubs' test Client response type doesn't model the dynamic
+# `.url` attribute redirect responses carry. Application code (everything
+# outside tests/) keeps full strict annotation coverage.
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+
+[tool.django-stubs]
+django_settings_module = "femtoboard.settings.test"

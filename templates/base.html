@@ -1,0 +1,33 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Femtoboard{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-full bg-femto-bg text-femto-text antialiased">
+  {% include "includes/site_header.html" %}
+  <main class="mx-auto max-w-5xl px-3 pb-24 pt-4 sm:px-4">
+    {% if messages %}
+      <ul class="mb-4 space-y-2">
+        {% for message in messages %}
+          <li class="rounded-md border border-femto-border bg-femto-surface px-3 py-2 text-sm">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% include "includes/global_motd.html" %}
+    {% block board_motd %}{% endblock %}
+    {% block content %}{% endblock %}
+  </main>
+  {% block composer %}{% endblock %}
+  <script src="{% static 'js/quote.js' %}" defer></script>
+  <script
+    src="{% static 'js/composer.js' %}"
+    data-worker-url="{% static 'js/pow-worker.js' %}"
+    defer
+  ></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}You are banned{% endblock %}
+{% block content %}
+  {% include "posts/_ban_notice.html" %}
+  <a class="femto-btn mt-3 inline-block" href="{% url 'boards:board_index' board_code=board.code %}">Back to /{{ board.code }}/</a>
+{% endblock %}

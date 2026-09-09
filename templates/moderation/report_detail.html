@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load posts_extras %}
+{% block title %}Report #{{ report.id }}{% endblock %}
+{% block content %}
+  <a class="text-sm text-femto-muted hover:text-femto-accent" href="{% url 'moderation:report_list' %}">&larr; Reports</a>
+  <h1 class="mb-4 mt-2 text-xl font-semibold">Report #{{ report.id }} &middot; {{ report.get_category_display }}</h1>
+
+  {% if report.explanation %}<p class="femto-card mb-4 text-sm">{{ report.explanation }}</p>{% endif %}
+
+  <h2 class="mb-2 text-lg font-medium">Reported post</h2>
+  {% include "posts/_post.html" with post=post %}
+
+  <div class="my-4 flex flex-wrap gap-2">
+    {% if perms.posts.delete_post %}
+      <form method="post" action="{% url 'moderation:post_delete' post_id=post.id %}">
+        {% csrf_token %}
+        <button type="submit" class="femto-btn bg-red-600 hover:bg-red-700">Delete post</button>
+      </form>
+    {% endif %}
+    {% if perms.posts.delete_thread %}
+      <form method="post" action="{% url 'moderation:thread_delete' thread_id=post.thread_id %}" data-confirm="Permanently delete this entire thread?">
+        {% csrf_token %}
+        <button type="submit" class="femto-btn bg-red-800 hover:bg-red-900">Delete thread</button>
+      </form>
+    {% endif %}
+    {% if perms.posts.lock_thread %}
+      <form method="post" action="{% url 'moderation:thread_lock_toggle' thread_id=post.thread_id %}">
+        {% csrf_token %}
+        <button type="submit" class="femto-btn">{% if post.thread.locked %}Unlock{% else %}Lock{% endif %} thread</button>
+      </form>
+    {% endif %}
+    {% if perms.posts.sticky_thread %}
+      <form method="post" action="{% url 'moderation:thread_sticky_toggle' thread_id=post.thread_id %}">
+        {% csrf_token %}
+        <button type="submit" class="femto-btn">{% if post.thread.stickied %}Unsticky{% else %}Sticky{% endif %} thread</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if ip_context %}
+    <h2 class="mb-2 text-lg font-medium">Originating IP</h2>
+    <div class="femto-card mb-4 text-sm">
+      <p class="mb-2 font-mono">{{ ip_context.ip_address }}</p>
+      <p class="mb-1 text-femto-muted">Active bans:</p>
+      <ul class="mb-3 list-inside list-disc">
+        {% for b in ip_context.active_bans %}
+          <li>{{ b.public_reason }} ({% if b.board %}/{{ b.board.code }}/{% else %}site-wide{% endif %}{% if b.is_permanent %}, permanent{% endif %})</li>
+        {% empty %}
+          <li class="list-none text-femto-muted">none</li>
+        {% endfor %}
+      </ul>
+      <p class="mb-1 text-femto-muted">Recent posts from this IP:</p>
+      <ul class="list-inside list-disc">
+        {% for p in ip_context.recent_posts %}
+          <li><a class="hover:text-femto-accent" href="{% url 'posts:thread_detail' board_code=p.thread.board.code thread_id=p.thread_id %}#{{ p|post_dom_id }}">/{{ p.thread.board.code }}/ No.{{ p.id }}</a> &mdash; {{ p.created_at }}</li>
+        {% empty %}
+          <li class="list-none text-femto-muted">none</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% if perms.moderation.add_ban %}
+      <h2 class="mb-2 text-lg font-medium">Issue ban</h2>
+      <form method="post" action="{% url 'moderation:ban_issue' %}" class="femto-card mb-4 max-w-sm space-y-2 text-sm">
+        {% csrf_token %}
+        {{ ban_form.as_p }}
+        <button type="submit" class="femto-btn w-full">Issue ban</button>
+      </form>
+    {% endif %}
+  {% endif %}
+
+  {% if perms.moderation.resolve_report %}
+    <h2 class="mb-2 text-lg font-medium">Resolve report</h2>
+    <form method="post" action="{% url 'moderation:report_resolve' report_id=report.id %}" class="femto-card max-w-sm space-y-2 text-sm">
+      {% csrf_token %}
+      {{ resolution_form.as_p }}
+      <button type="submit" class="femto-btn w-full">Save</button>
+    </form>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Could not post{% endblock %}
+{% block content %}
+  <div class="femto-card border-red-500/50">
+    <p class="font-semibold text-red-400">Your post could not be submitted.</p>
+    <p class="mt-1 text-sm text-femto-muted">{{ message }}</p>
+    <a class="femto-btn mt-3 inline-block" href="{% url 'boards:board_index' board_code=board.code %}">Back to /{{ board.code }}/</a>
+  </div>
+{% endblock %}

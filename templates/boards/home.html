@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}femtoboard{% endblock %}
+{% block content %}
+  <h1 class="mb-4 text-xl font-semibold">Boards</h1>
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    {% for b in boards %}
+      <a href="{% url 'boards:board_index' board_code=b.code %}" class="femto-card block hover:border-femto-accent">
+        <div class="font-medium">/{{ b.code }}/ &mdash; {{ b.name }}</div>
+        {% if b.description %}<div class="mt-1 text-sm text-femto-muted">{{ b.description }}</div>{% endif %}
+      </a>
+    {% empty %}
+      <p class="text-femto-muted">No boards are configured yet.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

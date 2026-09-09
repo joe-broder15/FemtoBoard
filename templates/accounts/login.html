@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Staff login{% endblock %}
+{% block content %}
+  <div class="mx-auto max-w-sm">
+    <h1 class="mb-4 text-xl font-semibold">Staff login</h1>
+    <form method="post" class="femto-card space-y-3">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <p class="text-sm text-red-400">{{ form.non_field_errors|join:" " }}</p>
+      {% endif %}
+      <div>
+        <label class="mb-1 block text-sm text-femto-muted" for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+      </div>
+      <div>
+        <label class="mb-1 block text-sm text-femto-muted" for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+      </div>
+      <button type="submit" class="femto-btn w-full">Log in</button>
+    </form>
+  </div>
+{% endblock %}

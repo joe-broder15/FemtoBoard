@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}/{{ board.code }}/ catalog{% endblock %}
+{% block content %}
+  <div class="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+    <h1 class="text-xl font-semibold">/{{ board.code }}/ catalog</h1>
+    <nav class="flex gap-2 text-sm">
+      <a class="{% if sort == 'bump' %}text-femto-accent{% else %}text-femto-muted{% endif %} hover:text-femto-accent" href="?sort=bump">bump</a>
+      <a class="{% if sort == 'new' %}text-femto-accent{% else %}text-femto-muted{% endif %} hover:text-femto-accent" href="?sort=new">new</a>
+      <a class="{% if sort == 'replies' %}text-femto-accent{% else %}text-femto-muted{% endif %} hover:text-femto-accent" href="?sort=replies">replies</a>
+    </nav>
+  </div>
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+    {% for card in cards %}
+      <a href="{% url 'posts:thread_detail' board_code=board.code thread_id=card.thread.id %}" class="femto-card block hover:border-femto-accent">
+        {% if card.thread.stickied %}<div class="mb-1 text-xs font-semibold text-femto-accent">STICKIED</div>{% endif %}
+        {% if card.opening_post.media %}
+          <img class="mb-2 h-32 w-full rounded object-cover" src="{{ card.opening_post.media.thumbnail.url }}" alt="">
+        {% endif %}
+        {% if card.opening_post.subject %}<div class="truncate text-sm font-medium">{{ card.opening_post.subject }}</div>{% endif %}
+        <p class="line-clamp-3 text-xs text-femto-muted">{{ card.opening_post.body|truncatechars:140 }}</p>
+        <div class="mt-2 text-xs text-femto-muted">No.{{ card.opening_post.id }} &middot; {{ card.thread.reply_count_annotated }}R / {{ card.thread.media_count_annotated }}M</div>
+      </a>
+    {% empty %}
+      <p class="text-femto-muted">No threads yet.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

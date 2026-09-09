@@ -1,0 +1,13 @@
+{% if page_obj.paginator.num_pages > 1 %}
+  <nav class="mt-4 flex flex-wrap gap-2 text-sm">
+    {% for page_number in page_obj.paginator.page_range %}
+      {% if page_number == page_obj.number %}
+        <span class="rounded-md bg-femto-accent px-2 py-1 text-white">{{ page_number }}</span>
+      {% elif page_number == 1 %}
+        <a class="rounded-md border border-femto-border px-2 py-1 hover:border-femto-accent" href="{% url 'boards:board_index' board_code=board.code %}">{{ page_number }}</a>
+      {% else %}
+        <a class="rounded-md border border-femto-border px-2 py-1 hover:border-femto-accent" href="{% url 'boards:board_index_page' board_code=board.code page=page_number %}">{{ page_number }}</a>
+      {% endif %}
+    {% endfor %}
+  </nav>
+{% endif %}

@@ -1,0 +1,41 @@
+{% if mode == "thread" %}{% url 'antispam:issue_challenge' board_code=board.code action='thread' as pow_challenge_url %}{% else %}{% url 'antispam:issue_challenge' board_code=board.code action='reply' as pow_challenge_url %}{% endif %}
+<aside
+  id="composer-panel"
+  class="fixed inset-x-0 bottom-0 z-40 border-t border-femto-border bg-femto-surface shadow-lg sm:inset-x-auto sm:bottom-auto sm:right-4 sm:top-24 sm:w-80 sm:rounded-lg sm:border"
+  data-composer
+  data-board="{{ board.code }}"
+  data-action="{% if mode == 'thread' %}THREAD{% else %}REPLY{% endif %}"
+  data-pow-url="{{ pow_challenge_url }}"
+>
+  <div class="flex items-center justify-between border-b border-femto-border px-3 py-2">
+    <span class="text-sm font-medium">
+      {% if mode == "thread" %}New thread on /{{ board.code }}/{% else %}Reply to thread #{{ thread.id }}{% endif %}
+    </span>
+    <button type="button" data-composer-toggle class="text-femto-muted hover:text-femto-accent" aria-label="Collapse composer">&minus;</button>
+  </div>
+  <form
+    method="post"
+    enctype="multipart/form-data"
+    action="{% if mode == 'thread' %}{% url 'posts:thread_create' board_code=board.code %}{% else %}{% url 'posts:reply_create' board_code=board.code thread_id=thread.id %}{% endif %}"
+    data-composer-form
+    class="space-y-2 p-3 text-sm"
+  >
+    {% csrf_token %}
+    {% if mode == "thread" %}
+      <input class="femto-input" type="text" name="subject" maxlength="100" placeholder="Subject (optional)">
+    {% endif %}
+    <textarea class="femto-input" name="body" rows="4" maxlength="{{ board.max_post_length }}" placeholder="Comment" data-composer-body></textarea>
+    <input class="femto-input" type="file" name="media" accept="image/jpeg,image/png,image/webp,image/gif,video/webm" {% if mode == "thread" %}required{% endif %}>
+    <input class="femto-input" type="text" name="name" maxlength="64" placeholder="{% if board.tripcodes_enabled %}Name#secret (optional){% else %}Name (optional){% endif %}">
+    {% if mode == "reply" %}
+      <input class="femto-input" type="password" name="deletion_password" maxlength="128" placeholder="Deletion password (optional)">
+      <label class="flex items-center gap-2 text-xs text-femto-muted">
+        <input type="checkbox" name="sage"> sage
+      </label>
+    {% endif %}
+    <input type="hidden" name="pow_id" data-pow-id>
+    <input type="hidden" name="pow_nonce" data-pow-nonce>
+    <p class="text-xs text-femto-muted" data-composer-status>Preparing proof-of-work&hellip;</p>
+    <button type="submit" class="femto-btn w-full" data-composer-submit disabled>Post</button>
+  </form>
+</aside>

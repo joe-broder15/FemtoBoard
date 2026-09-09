@@ -1,0 +1,53 @@
+{% load posts_extras %}
+<article id="{{ post|post_dom_id }}" class="femto-post {% if post.is_opening_post %}border-femto-accent/40{% endif %}">
+  <div class="mb-1 flex flex-wrap items-baseline gap-2 text-xs text-femto-muted">
+    {% if post.is_opening_post and post.subject %}
+      <span class="font-semibold text-femto-text">{{ post.subject }}</span>
+    {% endif %}
+    <span class="font-medium text-femto-text">{{ post.display_identity }}</span>
+    <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at }}</time>
+    <a href="#{{ post|post_dom_id }}" class="hover:text-femto-accent">No.{{ post.id }}</a>
+    {% if not post.is_tombstone %}
+      <button type="button" class="quote-btn hover:text-femto-accent" data-post-id="{{ post.id }}">Reply</button>
+      <details class="inline-block">
+        <summary class="inline cursor-pointer list-none hover:text-femto-accent">Report</summary>
+        <form method="post" action="{% url 'posts:report_post' board_code=post.board.code post_id=post.id %}" class="femto-card mt-1 w-56 space-y-1">
+          {% csrf_token %}
+          <select name="category" class="femto-input">
+            <option value="SPAM">Spam</option>
+            <option value="ILLEGAL">Illegal content</option>
+            <option value="RULE_VIOLATION">Board rule violation</option>
+            <option value="HARASSMENT">Harassment</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <textarea name="explanation" maxlength="500" rows="2" class="femto-input" placeholder="Details (optional)"></textarea>
+          <button type="submit" class="femto-btn w-full">Submit report</button>
+        </form>
+      </details>
+    {% endif %}
+  </div>
+
+  {% if post.is_tombstone %}
+    <p class="italic text-femto-muted">
+      {% if post.tombstone_reason == "MODERATOR" %}[Post deleted by moderator]{% else %}[Post deleted by user]{% endif %}
+    </p>
+  {% else %}
+    {% if post.media %}
+      <div class="mb-2">
+        {% if post.media.media_type == "VIDEO" %}
+          <video class="max-h-80 max-w-full rounded" controls preload="metadata" poster="{{ post.media.thumbnail.url }}">
+            <source src="{{ post.media.file.url }}" type="{{ post.media.mime_type }}">
+          </video>
+        {% else %}
+          <a href="{{ post.media.file.url }}" target="_blank" rel="noopener">
+            <img class="max-h-80 max-w-full rounded" src="{{ post.media.thumbnail.url }}" alt="{{ post.media.original_filename }}" loading="lazy">
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+    <div class="whitespace-pre-wrap break-words">{{ post|render_body }}</div>
+    {% with post|backlinks as bl %}
+      {% if bl %}<div class="mt-2 text-xs text-femto-muted">{{ bl }}</div>{% endif %}
+    {% endwith %}
+  {% endif %}
+</article>

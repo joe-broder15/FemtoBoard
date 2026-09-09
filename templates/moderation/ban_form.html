@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Issue ban{% endblock %}
+{% block content %}
+  <h1 class="mb-4 text-xl font-semibold">Issue ban</h1>
+  <form method="post" class="femto-card max-w-sm space-y-2 text-sm">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<p class="text-red-400">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+    {{ form.as_p }}
+    <button type="submit" class="femto-btn w-full">Issue ban</button>
+  </form>
+{% endblock %}

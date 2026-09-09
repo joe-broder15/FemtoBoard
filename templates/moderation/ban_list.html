@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Bans{% endblock %}
+{% block content %}
+  <div class="mb-4 flex items-baseline justify-between">
+    <h1 class="text-xl font-semibold">Bans</h1>
+    <a href="{% url 'moderation:ban_issue' %}" class="femto-btn">Issue ban</a>
+  </div>
+  {% if can_search %}
+    <form method="get" class="mb-4 flex max-w-sm gap-2">
+      <input class="femto-input" type="text" name="ip" value="{{ ip_filter }}" placeholder="Filter by IP">
+      <button type="submit" class="femto-btn">Filter</button>
+    </form>
+  {% endif %}
+  <table class="w-full text-left text-sm">
+    <thead class="text-femto-muted">
+      <tr><th class="py-1 pr-3">IP</th><th class="py-1 pr-3">Board</th><th class="py-1 pr-3">Reason</th><th class="py-1 pr-3">Expires</th><th class="py-1"></th></tr>
+    </thead>
+    <tbody>
+      {% for ban in bans %}
+        <tr class="border-t border-femto-border {% if not ban.is_active %}opacity-50{% endif %}">
+          <td class="py-1 pr-3 font-mono">{{ ban.ip_address }}</td>
+          <td class="py-1 pr-3">{% if ban.board %}/{{ ban.board.code }}/{% else %}site-wide{% endif %}</td>
+          <td class="py-1 pr-3">{{ ban.public_reason }}</td>
+          <td class="py-1 pr-3">{% if ban.is_permanent %}permanent{% else %}{{ ban.expires_at }}{% endif %}</td>
+          <td class="py-1">
+            {% if ban.is_active and perms.moderation.change_ban %}
+              <form method="post" action="{% url 'moderation:ban_revoke' ban_id=ban.id %}">
+                {% csrf_token %}
+                <button type="submit" class="text-femto-muted hover:text-femto-accent">revoke</button>
+              </form>
+            {% elif ban.revoked %}
+              revoked
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="py-2 text-femto-muted">No bans.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

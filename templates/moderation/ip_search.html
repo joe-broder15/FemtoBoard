@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}IP search{% endblock %}
+{% block content %}
+  <h1 class="mb-4 text-xl font-semibold">Unrestricted IP search</h1>
+  <form method="get" class="mb-4 flex max-w-sm gap-2">
+    <input class="femto-input" type="text" name="ip" value="{{ ip }}" placeholder="IP address">
+    <button type="submit" class="femto-btn">Search</button>
+  </form>
+  {% if ip %}
+    <h2 class="mb-2 text-lg font-medium">Active bans</h2>
+    <ul class="mb-4 list-inside list-disc text-sm">
+      {% for b in active_bans %}
+        <li>{{ b.public_reason }} ({% if b.board %}/{{ b.board.code }}/{% else %}site-wide{% endif %})</li>
+      {% empty %}
+        <li class="list-none text-femto-muted">none</li>
+      {% endfor %}
+    </ul>
+    <h2 class="mb-2 text-lg font-medium">Recent posts</h2>
+    <ul class="list-inside list-disc text-sm">
+      {% for p in recent_posts %}
+        <li><a class="hover:text-femto-accent" href="{% url 'posts:thread_detail' board_code=p.thread.board.code thread_id=p.thread_id %}">/{{ p.thread.board.code }}/ No.{{ p.id }}</a> &mdash; {{ p.created_at }}</li>
+      {% empty %}
+        <li class="list-none text-femto-muted">none</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}

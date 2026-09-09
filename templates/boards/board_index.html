@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}/{{ board.code }}/ - {{ board.name }}{% endblock %}
+{% block board_motd %}{% include "includes/board_motd.html" %}{% endblock %}
+{% block content %}
+  <div class="mb-4 flex items-baseline justify-between">
+    <h1 class="text-xl font-semibold">/{{ board.code }}/ &mdash; {{ board.name }}</h1>
+    <a class="text-sm text-femto-muted hover:text-femto-accent" href="{% url 'boards:catalog' board_code=board.code %}">catalog</a>
+  </div>
+
+  {% if active_ban %}
+    {% include "posts/_ban_notice.html" with ban=active_ban %}
+  {% elif not board.new_threads_enabled %}
+    <p class="femto-card mb-4 text-sm text-femto-muted">New threads are currently disabled on this board.</p>
+  {% endif %}
+
+  <div class="space-y-4">
+    {% for tp in thread_previews %}
+      <section class="femto-card">
+        {% if tp.thread.stickied %}<div class="mb-1 text-xs font-semibold text-femto-accent">STICKIED</div>{% endif %}
+        {% if tp.thread.locked %}<div class="mb-1 text-xs font-semibold text-femto-muted">LOCKED</div>{% endif %}
+        {% if tp.opening_post %}{% include "posts/_post.html" with post=tp.opening_post %}{% endif %}
+        {% if tp.thread.reply_count_annotated > tp.preview_replies|length %}
+          <p class="my-2 text-xs text-femto-muted">
+            {{ tp.thread.reply_count_annotated }} replies and {{ tp.thread.media_count_annotated }} media omitted.
+          </p>
+        {% endif %}
+        <div class="ml-3 space-y-2 border-l border-femto-border pl-3">
+          {% for post in tp.preview_replies %}
+            {% include "posts/_post.html" with post=post %}
+          {% endfor %}
+        </div>
+        <a class="mt-2 inline-block text-sm text-femto-accent hover:underline" href="{% url 'posts:thread_detail' board_code=board.code thread_id=tp.thread.id %}">
+          View thread &rarr;
+        </a>
+      </section>
+    {% empty %}
+      <p class="text-femto-muted">No threads yet. Be the first to post.</p>
+    {% endfor %}
+  </div>
+
+  {% include "includes/pagination.html" with page_obj=page_obj board=board %}
+{% endblock %}
+{% block composer %}
+  {% if not active_ban and board.new_threads_enabled %}{% include "posts/_composer_panel.html" with mode="thread" %}{% endif %}
+{% endblock %}

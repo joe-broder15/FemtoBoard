@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Thread #{{ thread.id }} on /{{ board.code }}/{% endblock %}
+{% block board_motd %}{% include "includes/board_motd.html" %}{% endblock %}
+{% block content %}
+  <div class="mb-4 flex items-baseline justify-between">
+    <a class="text-sm text-femto-muted hover:text-femto-accent" href="{% url 'boards:board_index' board_code=board.code %}">&larr; /{{ board.code }}/</a>
+    <div class="flex gap-2 text-xs">
+      {% if thread.stickied %}<span class="rounded bg-femto-accent/20 px-2 py-0.5 text-femto-accent">STICKIED</span>{% endif %}
+      {% if thread.locked %}<span class="rounded bg-femto-border px-2 py-0.5 text-femto-muted">LOCKED</span>{% endif %}
+    </div>
+  </div>
+
+  {% if active_ban %}{% include "posts/_ban_notice.html" with ban=active_ban %}{% endif %}
+  {% if thread.locked %}<p class="femto-card mb-4 text-sm text-femto-muted">Thread locked.</p>{% endif %}
+
+  <div class="space-y-3">
+    {% for post in posts %}
+      {% include "posts/_post.html" with post=post %}
+    {% endfor %}
+  </div>
+{% endblock %}
+{% block composer %}
+  {% if not active_ban and not thread.locked %}
+    {% include "posts/_composer_panel.html" with mode="reply" %}
+  {% endif %}
+{% endblock %}

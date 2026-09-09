@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .femto-btn {
+    @apply inline-flex items-center justify-center rounded-md bg-femto-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50;
+  }
+  .femto-input {
+    @apply w-full rounded-md border border-femto-border bg-femto-bg px-2 py-1.5 text-sm text-femto-text placeholder:text-femto-muted focus:border-femto-accent focus:outline-none;
+  }
+  .femto-card {
+    @apply rounded-lg border border-femto-border bg-femto-surface p-3;
+  }
+  .femto-post {
+    @apply rounded-md border border-femto-border bg-femto-surface p-3 text-sm;
+  }
+}
+
+#composer-panel.composer-collapsed form {
+  display: none;
+}
+

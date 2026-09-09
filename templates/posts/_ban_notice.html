@@ -1,0 +1,9 @@
+<div class="femto-card mb-4 border-red-500/50 text-sm">
+  <p class="font-semibold text-red-400">You are banned from posting{% if ban.board %} on /{{ ban.board.code }}/{% endif %}.</p>
+  <p class="mt-1">Reason: {{ ban.public_reason }}</p>
+  {% if ban.is_permanent %}
+    <p class="mt-1 text-femto-muted">This ban does not expire.</p>
+  {% else %}
+    <p class="mt-1 text-femto-muted">Expires: {{ ban.expires_at }}</p>
+  {% endif %}
+</div>

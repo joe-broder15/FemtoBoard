@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+  <h1 class="mb-4 text-xl font-semibold">Reports</h1>
+  <nav class="mb-4 flex gap-3 text-sm">
+    <a class="{% if status == 'OPEN' %}text-femto-accent{% else %}text-femto-muted{% endif %}" href="?status=OPEN">Open</a>
+    <a class="{% if status == 'REVIEWING' %}text-femto-accent{% else %}text-femto-muted{% endif %}" href="?status=REVIEWING">Reviewing</a>
+    <a class="{% if status == 'RESOLVED' %}text-femto-accent{% else %}text-femto-muted{% endif %}" href="?status=RESOLVED">Resolved</a>
+    <a class="{% if status == 'REJECTED' %}text-femto-accent{% else %}text-femto-muted{% endif %}" href="?status=REJECTED">Rejected</a>
+  </nav>
+  <div class="space-y-2">
+    {% for report in reports %}
+      <a href="{% url 'moderation:report_detail' report_id=report.id %}" class="femto-card block hover:border-femto-accent">
+        <div class="flex justify-between text-sm">
+          <span>Post #{{ report.post_id }} on /{{ report.post.thread.board.code }}/</span>
+          <span class="text-femto-muted">{{ report.get_category_display }}</span>
+        </div>
+        <div class="mt-1 text-xs text-femto-muted">{{ report.created_at }}</div>
+      </a>
+    {% empty %}
+      <p class="text-femto-muted">No reports.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

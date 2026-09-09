@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Staff dashboard{% endblock %}
+{% block content %}
+  <h1 class="mb-4 text-xl font-semibold">Staff dashboard</h1>
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <a href="{% url 'moderation:report_list' %}" class="femto-card hover:border-femto-accent">
+      <div class="text-2xl font-semibold">{{ open_reports }}</div>
+      <div class="text-sm text-femto-muted">open reports</div>
+    </a>
+    {% if perms.moderation.add_ban %}
+      <a href="{% url 'moderation:ban_list' %}" class="femto-card hover:border-femto-accent">
+        <div class="text-sm">Manage bans</div>
+      </a>
+    {% endif %}
+    {% if perms.moderation.search_ip %}
+      <a href="{% url 'moderation:ip_search' %}" class="femto-card hover:border-femto-accent">
+        <div class="text-sm">IP search</div>
+      </a>
+    {% endif %}
+  </div>
+
+  {% if recent_actions %}
+    <h2 class="mb-2 mt-6 text-lg font-medium">Recent moderation activity</h2>
+    <table class="w-full text-left text-sm">
+      <thead class="text-femto-muted">
+        <tr><th class="py-1 pr-3">When</th><th class="py-1 pr-3">Staff</th><th class="py-1 pr-3">Action</th><th class="py-1">Target</th></tr>
+      </thead>
+      <tbody>
+        {% for action in recent_actions %}
+          <tr class="border-t border-femto-border">
+            <td class="py-1 pr-3 text-femto-muted">{{ action.created_at }}</td>
+            <td class="py-1 pr-3">{{ action.actor|default:"system" }}</td>
+            <td class="py-1 pr-3">{{ action.verb }}</td>
+            <td class="py-1">{{ action.target }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}
